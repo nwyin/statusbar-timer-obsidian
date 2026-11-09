@@ -1,0 +1,6 @@
+.statusbar-file-timer { cursor: pointer; font-variant-numeric: tabular-nums; }
+.statusbar-file-timer.is-paused { color: var(--text-muted); }
+.statusbar-file-timer:focus-visible { outline: 2px solid var(--interactive-accent); }
+.file-timer-total { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; }
+.file-timer-total span { overflow-wrap: anywhere; }
+.file-timer-total code { flex-shrink: 0; }
