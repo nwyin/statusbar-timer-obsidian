@@ -6,7 +6,7 @@ Version 1.3 supports the mobile API surface: it uses Obsidian's Vault API and br
 
 Only the active file counts. Android/iOS use document visibility and page lifecycle events instead of desktop window focus (software keyboards can change focus). Hidden/suspended pages pause; timing gaps longer than 2.5 seconds are discarded. The plugin does not request background execution. A device whose OS kills the webview can lose up to five seconds since the local checkpoint; recovery waits until the app next opens.
 
-Mobile emulation checks the UI and plugin loading, not native WebKit/Android lifecycle behavior. Before relying on the numbers on a new device, run the hardware checks below.
+Mobile emulation checks the UI and plugin loading, not native WebKit/Android lifecycle behavior. Verify native backgrounding, screen-lock and sync behavior on your devices.
 
 ## Set up with Obsidian Sync
 
@@ -77,18 +77,3 @@ Concurrent sessions on two visible devices count separately, even for the same n
 Rename/delete operations cover contributions known to the device at that moment. Synchronize before moving/deleting files across devices. An unseen, newly created offline contribution to the old path cannot be reliably associated with a later rename; it remains in the ledger but is hidden if its old note path is absent. Renames performed while all plugin instances are closed also cannot be inferred. No frontmatter IDs are added to notes.
 
 Don't hand-edit or rename session files or the reserved folder while tracking. Malformed/future-schema files are left untouched and reported. Last valid in-memory data is retained during partial writes. If storage is full, a notice appears and pending local data is retried; a local checkpoint is not a replacement for backups. Deleting session files discards their history; disable the plugin on all devices before intentionally resetting data. No automatic compaction is performed: there is roughly one file per plugin load, plus a one-time migration file.
-
-## Android/iOS acceptance checks
-
-On each actual device, with the same synced vault:
-
-1. Open a Markdown note for 10 seconds. Open the timer pane: its total should increase by about 10 seconds.
-2. Background Obsidian for 20 seconds, return, then lock/unlock for 20 seconds. Neither interval should be added.
-3. Show/hide the software keyboard and type five new words; confirm tracking resumes normally and writing additions increase by five. Paste and deletion behavior should match the README.
-4. Pause file A from the pane or command, then open B: B must track by default. Return to A and restart the plugin: A must stay paused until resumed. Confirm paused time and edits do not count.
-5. Force-close/reopen the app. Totals should survive (up to five seconds may be lost), with no closed time added.
-6. Let both devices sync, take them offline, and view a note on each. Reconnect, wait for sync, and refresh the pane. Each device should show the sum, with no doubling when restarted.
-7. Move a file after both devices are synced. Confirm its history follows on both. Test with a disposable note.
-8. Check portrait/landscape, small text/large text, tap targets, sorting, filtering, and light/dark themes.
-
-Automated tests cover merge semantics, migration, crash-checkpoint replay, partial writes, and activity gating. Real Android/iOS acceptance results must be recorded separately; desktop emulation does not certify these hardware checks.

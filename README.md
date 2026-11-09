@@ -29,7 +29,7 @@ Each row has a Reading/Writing selector. Files under a `Clippings` folder defaul
 3. Copy `main.js`, `manifest.json`, and `styles.css` into that folder.
 4. Reload Obsidian. In **Settings → Community plugins**, enable community plugins and **Status Bar File Timer**.
 
-The compiled `main.js` is present after building. The plugin supports desktop and the mobile API surface; see [mobile setup, sync format and hardware checks](SYNC.md). It has not yet been published in Community Plugins.
+The compiled `main.js` is present after building. The plugin supports desktop and the mobile API surface; see [mobile setup and sync format](SYNC.md). It has not yet been published in Community Plugins.
 
 ## Data and timing
 
@@ -42,27 +42,10 @@ See [SYNC.md](SYNC.md) for the plaintext schema, setup steps, migration behavior
 ## Development
 
 - `npm run dev`: watch and rebuild JavaScript.
-- `npm run check`: run timing tests, TypeScript checking, and production build.
+- `npm run check`: run TypeScript checking and the production build.
 - `npm run build`: type-check and build `main.js`.
 
-The timer engine in `src/timer.ts`, merge model in `src/ledger.ts`, sync I/O coordinator in `src/sync.ts`, and activity policy in `src/activity.ts` are independently testable. `src/main.ts` handles workspace/window events, status bar, persistence, and the statistics pane. Minimum API target: Obsidian 1.8.7. Actual UI compatibility needs the checks below before publishing.
-
-## Manual acceptance checks
-
-Use a disposable test vault before a public release:
-
-1. Open A for ten seconds: its total increases approximately ten seconds.
-2. Switch to B for five seconds, then return to A: A resumes its saved total.
-3. Split A/B side by side: only the active pane's file increases. Repeat with a pop-out window.
-4. Switch apps or minimize for ten seconds: return and confirm no background time was added.
-5. Pause from the status bar, wait, switch files, and resume: no paused time is added.
-6. Quit/reopen the app and disable/re-enable the plugin: saved totals survive, with no closed time added.
-7. Sleep/wake the computer: the sleep interval is excluded.
-8. Rename a file and then its folder: totals follow both. Delete it: it disappears from totals.
-9. Open a non-file tab: tracking pauses. Verify PDF, Canvas, reading and editing views.
-10. Use the status-bar keyboard control and command palette; check the statistics pane and theme contrast.
-
-Automated tests and build pass. Desktop loading, exact migration, live session-file ingestion and deduplication, and mobile emulation at 390px have been checked. Mobile emulation also verified typing, pause/resume, and synthetic pagehide/pageshow handling. The user subsequently confirmed that the mobile installation/sync works. Specific device versions and individual native lifecycle results were not recorded; see TESTING.md and the regression checklist in SYNC.md.
+The timer engine in `src/timer.ts`, merge model in `src/ledger.ts`, sync I/O coordinator in `src/sync.ts`, and activity policy in `src/activity.ts` are independently testable. `src/main.ts` handles workspace/window events, status bar, persistence, and the statistics pane. Minimum API target: Obsidian 1.8.7. Verify UI compatibility before publishing.
 
 ## Publishing
 

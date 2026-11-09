@@ -4,7 +4,7 @@ Process verified against official documentation on 9 November 2026. The current 
 
 ## Prepare
 
-1. Run the manual acceptance checks in README.md on desktop, Android and iOS, including background/foreground, lock/unlock, keyboard, sync, and quit/reopen behavior. Verify the minimum supported Obsidian version and adjust `minAppVersion` and `versions.json` if necessary.
+1. Verify the behavior on desktop, Android and iOS using temporary checks as described in AGENTS.md. Verify the minimum supported Obsidian version and adjust `minAppVersion` and `versions.json` if necessary.
 2. Confirm the public author name (currently `tau`) in `manifest.json` and LICENSE. Optionally add `authorUrl`.
 3. Verify `statusbar-file-timer` is available in the Community directory. Plugin IDs must be unique and cannot contain `obsidian`. The repository name `statusbar-timer-obsidian` is fine. If changing the ID, also update the README install folder.
 4. Push this project's source, lockfile, README, LICENSE, manifest, versions file and workflows to [nwyin/statusbar-timer-obsidian](https://github.com/nwyin/statusbar-timer-obsidian). Do not upload `node_modules` or your vault's `data.json`. This does not require forking or cloning the reference repository.
