@@ -2,7 +2,7 @@
 
 ## Android and iOS
 
-Version 1.2 supports the mobile API surface: it uses Obsidian's Vault API and browser APIs, with no Node, Electron or direct filesystem dependencies. The desktop status bar is optional. On a phone, open **File time & words** from the ribbon or **Status Bar File Timer: Show file time totals** in the command palette. The pane has a Pause/Resume button; the same action is available as a command you can add to your mobile toolbar. On narrow screens each table row becomes a compact card.
+Version 1.3 supports the mobile API surface: it uses Obsidian's Vault API and browser APIs, with no Node, Electron or direct filesystem dependencies. The desktop status bar is optional. On a phone, open **File time & words** from the ribbon or **Status Bar File Timer: Show file time totals** in the command palette. The pane has a Pause/Resume button; the same action is available as a command you can add to your mobile toolbar. On narrow screens each table row becomes a compact card.
 
 Only the active file counts. Android/iOS use document visibility and page lifecycle events instead of desktop window focus (software keyboards can change focus). Hidden/suspended pages pause; timing gaps longer than 2.5 seconds are discarded. The plugin does not request background execution. A device whose OS kills the webview can lose up to five seconds since the local checkpoint; recovery waits until the app next opens.
 
@@ -12,7 +12,7 @@ Mobile emulation checks the UI and plugin loading, not native WebKit/Android lif
 
 1. Upgrade the desktop plugin first. Wait for the `File Timer/sessions/` folder to appear and for Obsidian Sync to finish uploading it. Old timing data is imported automatically; the original note contents are untouched.
 2. Connect the mobile app to the same remote vault and let notes and the `File Timer/` folder finish downloading. Do not exclude that folder. These are normal `.md` files, so **Sync all other types** is not needed for timer data.
-3. In Sync settings, enable **Installed community plugin list** and **Active community plugin list** if you want Obsidian to distribute/enable the plugin. Reload the receiving app after plugin files arrive, and confirm the plugin version is 1.2.0 or newer. If installing manually, copy `main.js`, `manifest.json`, and `styles.css` into the plugin folder, then enable it.
+3. In Sync settings, enable **Installed community plugin list** and **Active community plugin list** if you want Obsidian to distribute/enable the plugin. Reload the receiving app after plugin files arrive, and confirm the plugin version is 1.3.0 or newer. If installing manually, copy `main.js`, `manifest.json`, and `styles.css` into the plugin folder, then enable it.
 4. Open **File time & words**. Both devices should show matching totals after sync. The command **Save and refresh shared timer data** flushes this device's counters and rereads local files; Obsidian Sync still controls network delivery.
 5. You can now work offline. Each device writes its own session file; when sync resumes, their contributions combine automatically.
 
@@ -60,6 +60,7 @@ The session files are Markdown with a fenced JSON payload. An abbreviated exampl
 - Durations are integer milliseconds; timestamps are Unix milliseconds. `added` is observed positive word-count change, not document word count. `words` can be null when unsupported/unknown.
 - Each plugin load gets a random session ID. Only that running session updates its file; after it closes, the file is read-only history. No device identifier is copied from synced plugin settings.
 - Time and added-word counters only increase. Replayed revisions and conflict copies of the same entry merge by maxima, not addition. Distinct entry IDs add together. Reading/writing mode and word-count metadata use timestamp ordering, with deterministic ID tie-breaking.
+- Optional `paused` (boolean) and `pausedAt` (timestamp) fields store per-file pause preferences. Missing fields mean tracking is enabled. The latest explicit choice wins; the preference follows known contribution IDs through renames. Upgrade every device to 1.3.0 to honor pauses; older versions ignore this metadata.
 - Current document word counts are not added across devices. The pane counts locally available Markdown content; reading WPM uses combined reading time, and writing WPM uses combined observed additions/writing time.
 - Rename/delete changes target contribution IDs. Renames keep time; deletions tombstone those known contributions so old snapshots cannot resurrect them. Notes missing from this device's vault are hidden from its table, while their shared history is retained.
 - The `File Timer/` directory is reserved and excluded from tracking, so reading the ledger cannot create more tracking data.
@@ -84,7 +85,7 @@ On each actual device, with the same synced vault:
 1. Open a Markdown note for 10 seconds. Open the timer pane: its total should increase by about 10 seconds.
 2. Background Obsidian for 20 seconds, return, then lock/unlock for 20 seconds. Neither interval should be added.
 3. Show/hide the software keyboard and type five new words; confirm tracking resumes normally and writing additions increase by five. Paste and deletion behavior should match the README.
-4. Pause from the pane or command, switch notes, then resume. Paused intervals must not count.
+4. Pause file A from the pane or command, then open B: B must track by default. Return to A and restart the plugin: A must stay paused until resumed. Confirm paused time and edits do not count.
 5. Force-close/reopen the app. Totals should survive (up to five seconds may be lost), with no closed time added.
 6. Let both devices sync, take them offline, and view a note on each. Reconnect, wait for sync, and refresh the pane. Each device should show the sum, with no doubling when restarted.
 7. Move a file after both devices are synced. Confirm its history follows on both. Test with a disposable note.

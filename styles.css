@@ -22,7 +22,7 @@
 @media (max-width: 600px) {
   .file-timer-controls input, .file-timer-controls select { width: 100%; min-height: 44px; }
   .file-timer-activity { align-items: stretch; flex-direction: column; }
-  .file-timer-activity button, .file-timer-table-wrap select { min-height: 44px; }
+  .file-timer-activity button, .file-timer-table-wrap select, .file-timer-table-wrap button { min-height: 44px; }
   .file-timer-table-wrap table, .file-timer-table-wrap tbody, .file-timer-table-wrap tr { display: block; }
   .file-timer-table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .file-timer-table-wrap tr { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); margin-bottom: var(--size-4-3); padding: var(--size-4-2); }

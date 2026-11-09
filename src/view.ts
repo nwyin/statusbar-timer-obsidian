@@ -2,12 +2,12 @@ import { ItemView, WorkspaceLeaf } from 'obsidian';
 import { FileStats, Mode, wpm } from './stats';
 import { formatTime } from './timer';
 export const STATS_VIEW = 'statusbar-file-timer-stats';
-export interface StatsRow { path: string; total: number; stats: FileStats }
+export interface StatsRow { path: string; total: number; stats: FileStats; paused: boolean }
 export interface StatsSource {
   rows(): StatsRow[];
   setMode(path: string, mode: Mode): void;
-  togglePause(): void;
-  trackingState(): { paused: boolean; text: string };
+  togglePause(path?: string): void;
+  trackingState(): { paused: boolean; text: string; path: string | null };
 }
 export class TimerStatsView extends ItemView {
   private sort = 'time';
@@ -53,8 +53,9 @@ export class TimerStatsView extends ItemView {
     if (!this.body) return;
     const state = this.source.trackingState();
     this.activity.setText(state.text);
-    this.pauseButton.setText(state.paused ? 'Resume tracking' : 'Pause tracking');
+    this.pauseButton.setText(state.paused ? 'Resume this file' : 'Pause this file');
     this.pauseButton.setAttribute('aria-pressed', String(state.paused));
+    this.pauseButton.disabled = state.path === null;
     const rows = this.source.rows().filter(row => row.path.toLowerCase().includes(this.query));
     rows.sort((a, b) => {
       const difference = this.sort === 'recent' ? b.stats.lastTracked - a.stats.lastTracked
@@ -68,7 +69,7 @@ export class TimerStatsView extends ItemView {
     if (!rows.length) { this.body.createEl('p', { text: 'No tracked files match. Open a note to start tracking.' }); return; }
     const table = this.body.createEl('table');
     const header = table.createEl('thead').createEl('tr');
-    for (const text of ['File', 'Total time', 'Last tracked', 'Mode', 'Document words', 'Words added', 'WPM']) header.createEl('th', { text, attr: { scope: 'col' } });
+    for (const text of ['File', 'Total time', 'Last tracked', 'Mode', 'Document words', 'Words added', 'WPM', 'Tracking']) header.createEl('th', { text, attr: { scope: 'col' } });
     const tbody = table.createEl('tbody');
     for (const row of rows) {
       const tr = tbody.createEl('tr');
@@ -87,7 +88,11 @@ export class TimerStatsView extends ItemView {
       tr.createEl('td', { text: markdown ? String(row.stats.added) : '—' });
       const rate = markdown ? wpm(row.stats) : null;
       const rateCell = tr.createEl('td', { text: rate === null ? '—' : `${row.stats.mode === 'reading' ? '≈ ' : ''}${rate.toFixed(1)}` });
-      const labels = ['File', 'Total time', 'Last tracked', 'Mode', 'Document words', 'Words added', 'WPM'];
+      const pause = tr.createEl('td').createEl('button', { text: row.paused ? 'Resume' : 'Pause' });
+      pause.setAttribute('aria-label', `${row.paused ? 'Resume' : 'Pause'} tracking for ${row.path}`);
+      pause.setAttribute('aria-pressed', String(row.paused));
+      pause.addEventListener('click', () => { this.source.togglePause(row.path); this.refresh(); });
+      const labels = ['File', 'Total time', 'Last tracked', 'Mode', 'Document words', 'Words added', 'WPM', 'Tracking'];
       Array.from(tr.children).forEach((cell, index) => cell.setAttribute('data-label', labels[index]));
       if (row.stats.mode === 'reading' && row.stats.historicalMs > 0) {
         rateCell.setAttribute('title', `Includes ${formatTime(row.stats.historicalMs)} of historical time, assumed to be reading. Uses the current document word count.`);

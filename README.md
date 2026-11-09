@@ -4,9 +4,9 @@ Track cumulative focused time and reading/writing speed on desktop, Android and 
 
 Open a file and the timer starts automatically. Switch files and the previous file pauses while the new file resumes its own total. Switching to another application, hiding the window, closing Obsidian, or selecting a non-file view pauses tracking. Only the active file counts, including when multiple panes are visible. Reading counts without typing; this is not an idle or productivity detector. File views such as Markdown, Canvas and PDF are supported.
 
-The status bar shows `▶ 00:12:34` while running and `Ⅱ 00:12:34` while paused. Hover to see the file path. Click the timer (or focus it and press Enter/Space) to pause or resume tracking manually. Manual pause lasts until resumed or the plugin restarts. Use the command palette:
+The status bar shows `▶ 00:12:34` while running and `Ⅱ 00:12:34` while paused. Hover to see the file path. Click the timer (or focus it and press Enter/Space) to pause or resume tracking manually. Pause applies only to that file and persists across restarts and synced devices. New files track automatically. The statistics pane has Pause/Resume controls for each file; its top button controls the most recently viewed file and shows its path. Pausing excludes both time and writing additions without resetting existing totals. Use the command palette:
 
-- **Status Bar File Timer: Pause or resume tracking**
+- **Status Bar File Timer: Pause or resume tracking for this file**
 - **Status Bar File Timer: Show file time totals** (opens the File time & words pane)
 - **Status Bar File Timer: Save and refresh shared timer data**
 

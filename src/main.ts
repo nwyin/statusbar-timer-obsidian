@@ -14,7 +14,7 @@ export default class StatusBarFileTimer extends Plugin {
   private store!: SyncStore;
   private runningPath: string | null = null;
   private status?: HTMLElement;
-  private paused = false;
+  private lastFilePath: string | null = null;
   private stopped = false;
   private ready = false;
   private windows = new Set<Window>();
@@ -60,7 +60,7 @@ export default class StatusBarFileTimer extends Plugin {
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.togglePause(); }
       });
     }
-    this.addCommand({ id: 'toggle-pause', name: 'Pause or resume tracking', callback: () => this.togglePause() });
+    this.addCommand({ id: 'toggle-pause', name: 'Pause or resume tracking for this file', callback: () => this.togglePause() });
     this.addCommand({ id: 'show-totals', name: 'Show file time totals', callback: () => this.showTotals() });
     this.addCommand({ id: 'sync-now', name: 'Save and refresh shared timer data', callback: () => {
       void this.syncNow().catch(error => this.reportSaveError(error));
@@ -85,7 +85,7 @@ export default class StatusBarFileTimer extends Plugin {
           const note = this.app.vault.getAbstractFileByPath(row.path);
           if (note instanceof TFile) await this.refreshWords(note);
         }
-        this.refreshViews();
+        this.tick(); this.refreshViews();
       });
       else if (!isTimerData(file.path) && this.ledger.rows().some(row => row.path === file.path)) void this.refreshWords(file);
     };
@@ -99,6 +99,7 @@ export default class StatusBarFileTimer extends Plugin {
       }
       if (!this.ready) return;
       this.ledger.move(oldPath, file.path, Date.now());
+      if (this.lastFilePath === oldPath || this.lastFilePath?.startsWith(oldPath + '/')) this.lastFilePath = file.path + this.lastFilePath.slice(oldPath.length);
       this.timer.rename(oldPath, file.path);
       for (const [path, words] of this.wordCache) {
         if (path === oldPath || path.startsWith(oldPath + '/')) {
@@ -114,6 +115,7 @@ export default class StatusBarFileTimer extends Plugin {
       }
       if (!this.ready) return;
       this.ledger.move(file.path, null, Date.now());
+      if (this.lastFilePath === file.path || this.lastFilePath?.startsWith(file.path + '/')) this.lastFilePath = null;
       this.timer.remove(file.path); this.runningPath = null;
       for (const path of this.wordCache.keys()) if (path === file.path || path.startsWith(file.path + '/')) this.wordCache.delete(path);
       this.transition(); this.refreshViews();
@@ -182,11 +184,13 @@ export default class StatusBarFileTimer extends Plugin {
     const view = this.activeView();
     const doc = view?.containerEl.ownerDocument;
     if (doc?.defaultView) this.bindWindow(doc.defaultView);
+    const path = view?.file?.path ?? null;
+    if (path) this.lastFilePath = path;
+    const paused = path ? this.ledger.isPaused(path) : false;
     const running = shouldTrack({ mobile: Platform.isMobile, focused: doc?.hasFocus() ?? false,
       visible: doc?.visibilityState === 'visible', suspended: forcePause || (doc ? this.hiddenPages.has(doc) : false),
-      paused: this.paused, hasFile: !!view, inView: !!view?.containerEl.getClientRects().length });
+      paused, hasFile: !!view, inView: !!view?.containerEl.getClientRects().length });
     const now = Date.now();
-    const path = view?.file?.path ?? null;
     const credit = this.timer.update(now, running ? path : null);
     if (credit) this.ledger.record(credit.path, credit.ms, 0, this.mode(credit.path), now);
     const words = view instanceof MarkdownView ? countWords(view.editor.getValue()) : null;
@@ -198,14 +202,26 @@ export default class StatusBarFileTimer extends Plugin {
     const total = this.ledger.rows().find(row => row.path === path)?.total ?? 0;
     this.latestStatus = `${running ? 'Tracking' : 'Paused'} · ${formatTime(total)}${view?.file ? ' · ' + view.file.basename : ''}`;
     this.status?.setText(`${running ? '▶' : 'Ⅱ'} ${formatTime(total)}`);
-    const label = `${view?.file?.path ?? 'No active file'} · ${this.latestStatus}. Click to ${this.paused ? 'resume' : 'pause'} tracking.`;
+    const label = `${view?.file?.path ?? 'No active file'} · ${this.latestStatus}. Click to ${paused ? 'resume' : 'pause'} tracking for this file.`;
     this.status?.setAttribute('aria-label', label);
     this.status?.setAttribute('title', label);
     this.status?.toggleClass('is-paused', !running);
   }
   private transition(forcePause = false): void { this.tick(forcePause); void this.persist(); }
-  togglePause(): void { this.paused = !this.paused; this.transition(); this.refreshViews(); }
-  trackingState(): { paused: boolean; text: string } { return { paused: this.paused, text: this.latestStatus }; }
+  togglePause(path?: string): void {
+    if (!this.ready) return;
+    const target = path ?? this.activeView()?.file?.path ?? this.lastFilePath;
+    if (!target || isTimerData(target) || !(this.app.vault.getAbstractFileByPath(target) instanceof TFile)) return;
+    this.tick();
+    this.ledger.pause(target, !this.ledger.isPaused(target), Date.now());
+    this.transition(); this.refreshViews();
+  }
+  trackingState(): { paused: boolean; text: string; path: string | null } {
+    const path = this.activeView()?.file?.path ?? this.lastFilePath;
+    const paused = path ? this.ledger.isPaused(path) : false;
+    const text = !this.ready ? this.latestStatus : path ? `${paused ? 'Tracking paused' : 'Tracking enabled'} · ${path}` : 'Open a file to control its timer.';
+    return { paused, text, path };
+  }
   private checkpoint(): void {
     if (!this.ready) return;
     try { this.app.saveLocalStorage(CHECKPOINT_KEY, this.ledger.local); }
@@ -228,7 +244,7 @@ export default class StatusBarFileTimer extends Plugin {
     this.tick(); await this.persist(); await this.store.load(); this.refreshViews();
   }
   rows(): StatsRow[] {
-    return this.ledger.rows().filter(row => row.total > 0 && this.app.vault.getAbstractFileByPath(row.path) instanceof TFile)
+    return this.ledger.rows().filter(row => (row.total > 0 || row.paused) && this.app.vault.getAbstractFileByPath(row.path) instanceof TFile)
       .map(row => ({ ...row, stats: { ...row.stats, words: this.wordCache.get(row.path) ?? row.stats.words } }));
   }
   setMode(path: string, mode: Mode): void {

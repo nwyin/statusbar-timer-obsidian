@@ -15,3 +15,9 @@ Checked on 9 November 2026:
 On 9 November 2026, after volunteering to test Android and iOS and receiving the mobile installation/sync instructions, the user reported that it works and requested that the changes be synced to GitHub. This is user-reported functional confirmation; device models, OS/Obsidian versions and individual checklist results were not supplied.
 
 No physical device was directly inspected by the coding agent. Keep the per-device checklist in [SYNC.md](SYNC.md) for future regression testing, especially native background/foreground, screen-lock, OS termination and software-keyboard behavior. Desktop emulation and synthetic lifecycle events alone do not establish those native behaviors.
+
+## 1.3.0 — per-file pause
+
+- All 38 automated tests and the production build pass, including pause persistence, independent-file defaults, stale sync deliveries, timestamp ties, rename/delete behavior and older data compatibility.
+- Live desktop integration with temporary notes and simulated window focus verified: pause A stops its time and writing additions; opening B starts tracking by default; returning to A stays paused; plugin reload preserves the preference; the pane targets the last viewed file and its Resume button resumes that file.
+- Pause preferences are optional fields in the existing session format. All devices must run 1.3.0 or newer to honor them.

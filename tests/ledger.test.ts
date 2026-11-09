@@ -77,3 +77,50 @@ test('simultaneous mode changes converge deterministically; an explicit later ch
   a.mode('A.md', 'reading', 1); b.ingest('a', a.local);
   assert.equal(a.rows()[0].stats.mode, 'reading'); assert.equal(b.rows()[0].stats.mode, 'reading');
 });
+
+test('pause is per file, defaults off, and persists through serialization and a new session', () => {
+  const a = make('a');
+  assert.equal(a.isPaused('new.md'), false);
+  a.pause('A.md', true, 10);
+  assert.equal(a.isPaused('A.md'), true);
+  assert.equal(a.isPaused('B.md'), false);
+  const reopened = make('reopened');
+  reopened.ingest('a', decodeDocument(encodeDocument(a.local)));
+  assert.equal(reopened.isPaused('A.md'), true);
+  assert.equal(reopened.isPaused('new.md'), false);
+});
+test('resume syncs and stale snapshots cannot re-pause a file; independent files stay paused', () => {
+  const a = make('a'), b = make('b');
+  a.pause('A.md', true, 10); a.pause('B.md', true, 10);
+  const old = structuredClone(a.local);
+  b.ingest('a', old); b.pause('A.md', false, 20);
+  a.ingest('b', b.local); b.ingest('a', old);
+  for (const ledger of [a, b]) {
+    assert.equal(ledger.isPaused('A.md'), false);
+    assert.equal(ledger.isPaused('B.md'), true);
+  }
+  a.pause('A.md', true, 1); b.ingest('a', a.local);
+  assert.equal(b.isPaused('A.md'), true);
+});
+test('pause survives renames and clears when a deleted path is reused', () => {
+  const a = make('a'); a.pause('folder/A.md', true, 10);
+  a.move('folder', 'renamed', 20);
+  assert.equal(a.isPaused('renamed/A.md'), true);
+  assert.equal(a.isPaused('folder/A.md'), false);
+  a.move('renamed/A.md', null, 30);
+  assert.equal(a.isPaused('renamed/A.md'), false);
+});
+test('older data defaults to enabled and malformed pause metadata is rejected', () => {
+  const a = make('a'); a.record('A.md', 1000, 0, 'reading', 1);
+  assert.equal(decodeDocument(encodeDocument(a.local)).entries[0].paused, undefined);
+  assert.equal(a.isPaused('A.md'), false);
+  const bad = structuredClone(a.local);
+  bad.entries[0].paused = true;
+  assert.throws(() => validateDocument(bad), /pause preference/);
+});
+test('equal-time pause conflicts converge regardless of snapshot arrival order', () => {
+  const a = make('a'), b = make('b');
+  a.pause('A.md', true, 10); b.pause('A.md', false, 10);
+  a.ingest('b', b.local); b.ingest('a', a.local);
+  assert.equal(a.isPaused('A.md'), b.isPaused('A.md'));
+});

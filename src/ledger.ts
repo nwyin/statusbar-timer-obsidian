@@ -15,6 +15,8 @@ export interface Entry {
   wordsAt: number;
   mode: Mode;
   modeAt: number;
+  paused?: boolean;
+  pausedAt?: number;
 }
 export interface Change { id: string; target: string; path: string | null; at: number }
 export interface LedgerDocument {
@@ -26,7 +28,7 @@ export interface LedgerDocument {
   entries: Entry[];
   changes: Change[];
 }
-export interface LedgerRow { path: string; total: number; stats: FileStats }
+export interface LedgerRow { path: string; total: number; stats: FileStats; paused: boolean }
 export function newDocument(id: string, kind: 'session' | 'legacy' = 'session'): LedgerDocument {
   return { format: 'statusbar-file-timer', version: 1, kind, id, revision: 0, entries: [], changes: [] };
 }
@@ -47,6 +49,7 @@ export function validateDocument(value: unknown): LedgerDocument {
       || ids.has(e.id) || !['reading', 'writing'].includes(e.mode)
       || !['readingMs', 'writingMs', 'historicalMs', 'added', 'lastTracked', 'wordsAt', 'modeAt'].every(key => numeric(e[key as keyof Entry]))
       || !(e.words === null || numeric(e.words))) throw new Error('Invalid timer entry');
+    if ((e.paused !== undefined || e.pausedAt !== undefined) && (typeof e.paused !== 'boolean' || !numeric(e.pausedAt))) throw new Error('Invalid pause preference');
     ids.add(e.id);
   }
   for (const c of d.changes) {
@@ -76,6 +79,7 @@ export function mergeDocuments(a: LedgerDocument, b: LedgerDocument): LedgerDocu
     if (previous) {
       for (const key of ['readingMs', 'writingMs', 'historicalMs', 'added', 'lastTracked'] as const) merged[key] = Math.max(previous[key], entry[key]);
       if (previous.modeAt > merged.modeAt) { merged.mode = previous.mode; merged.modeAt = previous.modeAt; }
+      if ((previous.pausedAt ?? -1) > (merged.pausedAt ?? -1)) { merged.paused = previous.paused; merged.pausedAt = previous.pausedAt; }
       if (previous.wordsAt > merged.wordsAt) { merged.words = previous.words; merged.wordsAt = previous.wordsAt; }
     }
     entries.set(entry.id, merged);
@@ -109,6 +113,7 @@ export class Ledger {
         if (!e) { entries.set(source.id, { ...source }); continue; }
         for (const key of ['readingMs', 'writingMs', 'historicalMs', 'added', 'lastTracked'] as const) e[key] = Math.max(e[key], source[key]);
         if (source.wordsAt >= e.wordsAt && source.words !== null) { e.words = source.words; e.wordsAt = source.wordsAt; }
+        if ((source.pausedAt ?? -1) >= (e.pausedAt ?? -1) && source.paused !== undefined) { e.paused = source.paused; e.pausedAt = source.pausedAt; }
         if (source.modeAt >= e.modeAt) { e.mode = source.mode; e.modeAt = source.modeAt; }
       }
       for (const c of doc.changes) {
@@ -119,21 +124,24 @@ export class Ledger {
     }
     const paths = new Map<string, string | null>();
     const rows = new Map<string, LedgerRow>();
-    const metadata = new Map<string, { modeAt: number; modeId: string; wordsAt: number; wordsId: string }>();
+    const metadata = new Map<string, { modeAt: number; modeId: string; wordsAt: number; wordsId: string; pausedAt: number; pausedId: string }>();
     for (const e of [...entries.values()].sort((a, b) => a.id.localeCompare(b.id))) {
       const path = changes.has(e.id) ? changes.get(e.id)!.path : e.path;
       paths.set(e.id, path);
       if (path === null) continue;
       let row = rows.get(path);
       if (!row) {
-        row = { path, total: 0, stats: { mode: e.mode, words: null, added: 0, readingMs: 0, writingMs: 0, historicalMs: 0, lastTracked: 0 } };
+        row = { path, total: 0, paused: false, stats: { mode: e.mode, words: null, added: 0, readingMs: 0, writingMs: 0, historicalMs: 0, lastTracked: 0 } };
         rows.set(path, row);
-        metadata.set(path, { modeAt: -1, modeId: '', wordsAt: -1, wordsId: '' });
+        metadata.set(path, { modeAt: -1, modeId: '', wordsAt: -1, wordsId: '', pausedAt: -1, pausedId: '' });
       }
       for (const key of ['readingMs', 'writingMs', 'historicalMs', 'added'] as const) row.stats[key] += e[key];
       row.total += e.readingMs + e.writingMs + e.historicalMs;
       row.stats.lastTracked = Math.max(row.stats.lastTracked, e.lastTracked);
       const meta = metadata.get(path)!;
+      if (e.paused !== undefined && ((e.pausedAt ?? -1) > meta.pausedAt || (e.pausedAt === meta.pausedAt && e.id > meta.pausedId))) {
+        row.paused = e.paused; meta.pausedAt = e.pausedAt!; meta.pausedId = e.id;
+      }
       if (e.modeAt > meta.modeAt || (e.modeAt === meta.modeAt && e.id > meta.modeId)) {
         row.stats.mode = e.mode; meta.modeAt = e.modeAt; meta.modeId = e.id;
       }
@@ -171,6 +179,14 @@ export class Ledger {
     e.mode = mode;
     // Ensure a deliberate local change wins even after another device's clock skew.
     e.modeAt = Math.max(now, ...[...this.merged().entries.values()].filter(entry => this.merged().paths.get(entry.id) === path).map(entry => entry.modeAt + 1));
+    this.changed();
+  }
+  isPaused(path: string): boolean { return this.rows().find(row => row.path === path)?.paused ?? false; }
+  pause(path: string, paused: boolean, now: number): void {
+    const e = this.entry(path);
+    const merged = this.merged();
+    e.paused = paused;
+    e.pausedAt = Math.max(now, ...[...merged.entries.values()].filter(entry => merged.paths.get(entry.id) === path).map(entry => (entry.pausedAt ?? 0) + 1));
     this.changed();
   }
   move(oldPath: string, newPath: string | null, now: number): void {
