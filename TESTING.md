@@ -10,8 +10,8 @@ Checked on 9 November 2026:
 - Mobile-emulated Markdown editor: initial content added zero words; an input transaction adding three words added exactly three. Synthetic pagehide paused timing, pageshow resumed eligibility, manual pause excluded time and edits, and resume restarted timing. This test caught and fixed an initial-load word-count bug by switching writing measurement to CodeMirror input-event transactions.
 - Returned the app to desktop mode and confirmed the status bar and statistics pane loaded. Reserved timer data files were not themselves tracked.
 
-## Still requiring physical devices
+## User device confirmation
 
-No Android device was attached to ADB and no booted iOS simulator was available. Android WebView and iOS WKWebView background/foreground, screen-lock, OS termination, software-keyboard behavior and a real two-device Obsidian Sync roundtrip have **not** been verified. Synthetic lifecycle events and desktop emulation are not substitutes for these checks.
+On 9 November 2026, after volunteering to test Android and iOS and receiving the mobile installation/sync instructions, the user reported that it works and requested that the changes be synced to GitHub. This is user-reported functional confirmation; device models, OS/Obsidian versions and individual checklist results were not supplied.
 
-Run the per-device checklist in [SYNC.md](SYNC.md) and record the device/OS/Obsidian version and results before treating this as hardware-tested mobile support. Desktop-side Obsidian Sync can report that files are uploaded, but that alone does not prove that a phone has received or loaded them.
+No physical device was directly inspected by the coding agent. Keep the per-device checklist in [SYNC.md](SYNC.md) for future regression testing, especially native background/foreground, screen-lock, OS termination and software-keyboard behavior. Desktop emulation and synthetic lifecycle events alone do not establish those native behaviors.

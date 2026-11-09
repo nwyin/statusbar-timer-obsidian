@@ -62,7 +62,7 @@ Use a disposable test vault before a public release:
 9. Open a non-file tab: tracking pauses. Verify PDF, Canvas, reading and editing views.
 10. Use the status-bar keyboard control and command palette; check the statistics pane and theme contrast.
 
-Automated tests and build pass. Desktop loading, exact migration, live session-file ingestion and deduplication, and mobile emulation at 390px have been checked. Mobile emulation also verified typing, pause/resume, and synthetic pagehide/pageshow handling. Physical Android/iOS background and screen-lock checks remain unverified; see SYNC.md.
+Automated tests and build pass. Desktop loading, exact migration, live session-file ingestion and deduplication, and mobile emulation at 390px have been checked. Mobile emulation also verified typing, pause/resume, and synthetic pagehide/pageshow handling. The user subsequently confirmed that the mobile installation/sync works. Specific device versions and individual native lifecycle results were not recorded; see TESTING.md and the regression checklist in SYNC.md.
 
 ## Publishing
 
