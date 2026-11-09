@@ -117,9 +117,13 @@ export class Ledger {
         if (source.modeAt >= e.modeAt) { e.mode = source.mode; e.modeAt = source.modeAt; }
       }
       for (const c of doc.changes) {
+        // A remote rename can arrive as delete(old path), then create(new path).
+        // Legacy null-path markers cannot distinguish that from an intentional
+        // deletion. Keep history and resolve only explicit renames; the viewer
+        // hides missing notes using this device's vault, not shared tombstones.
+        if (c.path === null) continue;
         const previous = changes.get(c.target);
-        // A deleted contribution stays deleted; a new file gets new entry IDs.
-        if (!previous || (previous.path !== null && (c.path === null || c.at > previous.at || (c.at === previous.at && c.id > previous.id)))) changes.set(c.target, c);
+        if (!previous || c.at > previous.at || (c.at === previous.at && c.id > previous.id)) changes.set(c.target, c);
       }
     }
     const paths = new Map<string, string | null>();
@@ -189,11 +193,11 @@ export class Ledger {
     e.pausedAt = Math.max(now, ...[...merged.entries.values()].filter(entry => merged.paths.get(entry.id) === path).map(entry => (entry.pausedAt ?? 0) + 1));
     this.changed();
   }
-  move(oldPath: string, newPath: string | null, now: number): void {
+  move(oldPath: string, newPath: string, now: number): void {
     for (const [id, path] of this.merged().paths) {
       if (path !== null && (path === oldPath || path.startsWith(oldPath + '/'))) {
         this.local.changes.push({ id: this.local.id + ':' + this.uuid(), target: id,
-          path: newPath === null ? null : newPath + path.slice(oldPath.length), at: now });
+          path: newPath + path.slice(oldPath.length), at: now });
       }
     }
     this.changed();

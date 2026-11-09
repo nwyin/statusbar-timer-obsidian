@@ -114,7 +114,8 @@ export default class StatusBarFileTimer extends Plugin {
         this.refreshViews(); return;
       }
       if (!this.ready) return;
-      this.ledger.move(file.path, null, Date.now());
+      // Sync may deliver a move as deletion followed by creation. Do not
+      // publish a destructive history change for a local absence.
       if (this.lastFilePath === file.path || this.lastFilePath?.startsWith(file.path + '/')) this.lastFilePath = null;
       this.timer.remove(file.path); this.runningPath = null;
       for (const path of this.wordCache.keys()) if (path === file.path || path.startsWith(file.path + '/')) this.wordCache.delete(path);
@@ -174,7 +175,8 @@ export default class StatusBarFileTimer extends Plugin {
   }
   private activeView(): FileView | null {
     const view = this.app.workspace.getActiveViewOfType(FileView);
-    return view?.file && !isTimerData(view.file.path) ? view : null;
+    return view?.file && !isTimerData(view.file.path)
+      && this.app.vault.getAbstractFileByPath(view.file.path) === view.file ? view : null;
   }
   private mode(path: string): Mode {
     return this.ledger.rows().find(row => row.path === path)?.stats.mode ?? (/^clippings\//i.test(path) || /\/clippings\//i.test(path) ? 'reading' : 'writing');

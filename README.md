@@ -33,7 +33,7 @@ The compiled `main.js` is present after building. The plugin supports desktop an
 
 ## Data and timing
 
-Totals are stored in ordinary Markdown files under `File Timer/sessions/`, with JSON payloads describing each session's contributions. Each app session writes a separate file; repeated deliveries are deduplicated, and independent device contributions combine. Existing plugin data migrates automatically. No note contents or frontmatter are changed, and no network requests or analytics are made by the plugin.
+Totals are stored in ordinary Markdown files under `File Timer/sessions/`, with JSON payloads describing each session's contributions. Each app session writes a separate file; repeated deliveries are deduplicated, and independent device contributions combine. Existing plugin data migrates automatically. Note deletions hide rows without deleting shared history, so synced moves cannot wipe totals. Restoring or recreating a path retains its previous totals and pause preference. No note contents or frontmatter are changed, and no network requests or analytics are made by the plugin.
 
 Use Obsidian Sync to sync the whole `File Timer/` folder alongside the notes. Local crash checkpoints save every five seconds; session files flush every 30 seconds and on file/focus/lifecycle changes. Gaps longer than 2.5 seconds are discarded to avoid counting sleep. A fully obscured but still focused desktop window cannot reliably be distinguished from a visible one.
 
