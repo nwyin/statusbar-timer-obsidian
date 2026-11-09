@@ -7,7 +7,19 @@ Open a file and the timer starts automatically. Switch files and the previous fi
 The status bar shows `▶ 00:12:34` while running and `Ⅱ 00:12:34` while paused. Hover to see the file path. Click the timer (or focus it and press Enter/Space) to pause or resume tracking manually. Manual pause lasts until resumed or the plugin restarts. Use the command palette:
 
 - **Status Bar File Timer: Pause or resume tracking**
-- **Status Bar File Timer: Show file time totals**
+- **Status Bar File Timer: Show file time totals** (opens the File time & words pane)
+
+## File time & words pane
+
+Open the pane from the chart ribbon icon or the **Show file time totals** command. It opens as a workspace tab that you can drag into a split or sidebar. Filter by file path and sort by total time, most recently tracked, name, WPM, or words added. Click a file path to open it. The table refreshes every five seconds unless a table control has focus.
+
+Each row has a Reading/Writing selector. Files under a `Clippings` folder default to Reading; other files default to Writing. Changing mode preserves both counters and only changes how future time is classified.
+
+- **Reading WPM (estimate):** current document words / accumulated reading minutes. Assumes one full read; revisiting a file increases the denominator. This does not detect how many words you actually read.
+- **Writing WPM:** sum of positive word-count changes observed while the file is actively tracked / accumulated writing minutes. Existing content is a baseline, deletions do not subtract, and pasted text and retyping count as additions. Time spent thinking also counts.
+- Word counts apply to Markdown, exclude frontmatter, fenced code, images and link URLs, and use Unicode letter/number groups. This is an approximate prose count, not a language-specific tokenizer. Other file formats show a dash for word statistics.
+- Rates display after at least one second of the corresponding mode's time. Very short samples can produce large WPM values.
+- Version 1.0 time totals are preserved. Last-tracked timestamps and mode-specific word/time statistics begin with version 1.1; past reading/writing activity cannot be reconstructed.
 
 ## Install locally
 
@@ -30,7 +42,7 @@ Only totals are saved, never a running timestamp. Saves occur every five seconds
 - `npm run check`: run timing tests, TypeScript checking, and production build.
 - `npm run build`: type-check and build `main.js`.
 
-The timer engine in `src/timer.ts` is independent of Obsidian. `src/main.ts` handles workspace/window events, status bar, persistence, and totals display. Minimum API target: Obsidian 1.8.7. Actual UI compatibility needs the checks below before publishing.
+The timer engine in `src/timer.ts` is independent of Obsidian. `src/main.ts` handles workspace/window events, status bar, persistence, and the statistics pane. Minimum API target: Obsidian 1.8.7. Actual UI compatibility needs the checks below before publishing.
 
 ## Manual acceptance checks
 
@@ -47,7 +59,7 @@ Use a disposable test vault before a public release:
 9. Open a non-file tab: tracking pauses. Verify PDF, Canvas, reading and editing views.
 10. Use the status-bar keyboard control and command palette; check the totals modal and theme contrast.
 
-Automated tests and build pass; the live Obsidian acceptance checks have not yet been performed.
+Automated tests and build pass. The plugin has also been installed in a live desktop vault and its status bar verified; the complete manual acceptance checklist remains to be performed.
 
 ## Publishing
 

@@ -7,14 +7,14 @@ Process verified against official documentation on 9 November 2026. The current 
 1. Run the manual acceptance checks in README.md on desktop, including pop-out windows and quit/reopen behavior. Verify the minimum supported Obsidian version and adjust `minAppVersion` and `versions.json` if necessary.
 2. Confirm the public author name (currently `tau`) in `manifest.json` and LICENSE. Optionally add `authorUrl`.
 3. Verify `statusbar-file-timer` is available in the Community directory. Plugin IDs must be unique and cannot contain `obsidian`. The repository name `statusbar-timer-obsidian` is fine. If changing the ID, also update the README install folder.
-4. Create a new public GitHub repository named `statusbar-timer-obsidian`, then upload this project's source, lockfile, README, LICENSE, manifest, versions file and workflows. Do not upload `node_modules` or your vault's `data.json`. This does not require forking or cloning the reference repository.
+4. Push this project's source, lockfile, README, LICENSE, manifest, versions file and workflows to [nwyin/statusbar-timer-obsidian](https://github.com/nwyin/statusbar-timer-obsidian). Do not upload `node_modules` or your vault's `data.json`. This does not require forking or cloning the reference repository.
 5. Review the [developer policies](https://docs.obsidian.md/Developer%20policies) and [plugin submission requirements](https://docs.obsidian.md/community-directory/submission-requirements-for-plugins).
 
 ## Release
 
-The included GitHub Actions release workflow runs checks, builds, and creates a **draft** release when you push a version tag such as `1.0.0`. It verifies that the tag matches `manifest.json`. No `v` prefix. Review the draft and publish it when ready.
+The included GitHub Actions release workflow runs checks, builds, and creates a **draft** release when you push a version tag such as `1.1.0`. It verifies that the tag matches `manifest.json`. No `v` prefix. Review the draft and publish it when ready.
 
-Alternatively, after `npm ci && npm run check`, create a GitHub release manually using tag `1.0.0` and attach these three files individually:
+Alternatively, after `npm ci && npm run check`, create a GitHub release manually using tag `1.1.0` and attach these three files individually:
 
 - `main.js`
 - `manifest.json`

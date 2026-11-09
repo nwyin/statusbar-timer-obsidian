@@ -4,3 +4,14 @@
 .file-timer-total { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; }
 .file-timer-total span { overflow-wrap: anywhere; }
 .file-timer-total code { flex-shrink: 0; }
+.file-timer-pane { padding: var(--size-4-4); }
+.file-timer-controls { display: flex; flex-wrap: wrap; gap: var(--size-4-2); }
+.file-timer-controls input { flex: 1; min-width: 140px; }
+.file-timer-summary { font-variant-numeric: tabular-nums; font-weight: 600; }
+.file-timer-help { color: var(--text-muted); font-size: var(--font-ui-small); max-width: 75ch; }
+.file-timer-table-wrap { overflow-x: auto; }
+.file-timer-table-wrap table { width: 100%; border-collapse: collapse; font-size: var(--font-ui-small); }
+.file-timer-table-wrap th, .file-timer-table-wrap td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--background-modifier-border); font-variant-numeric: tabular-nums; }
+.file-timer-table-wrap th { white-space: nowrap; color: var(--text-muted); }
+.file-timer-table-wrap td:first-child { min-width: 180px; overflow-wrap: anywhere; }
+.file-timer-table-wrap tr:hover td { background: var(--background-secondary); }

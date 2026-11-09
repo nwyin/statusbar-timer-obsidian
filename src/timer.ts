@@ -12,16 +12,19 @@ export class FileTimer {
     }
   }
 
-  update(now: number, nextPath: string | null): void {
+  update(now: number, nextPath: string | null): { path: string; ms: number } | null {
+    let credit: { path: string; ms: number } | null = null;
     if (this.last !== null && this.path !== null) {
       const elapsed = now - this.last;
       // Discard sleep, suspended rendering, and clock discontinuities.
       if (elapsed > 0 && elapsed <= 2500) {
         this.totals[this.path] = (this.totals[this.path] ?? 0) + elapsed;
+        credit = { path: this.path, ms: elapsed };
       }
     }
     this.last = now;
     this.path = nextPath;
+    return credit;
   }
 
   rename(oldPath: string, newPath: string): void {
