@@ -10,7 +10,7 @@ export interface StatsSource {
   trackingState(): { paused: boolean; text: string; path: string | null };
 }
 export class TimerStatsView extends ItemView {
-  private sort = 'time';
+  private sort = 'recent';
   private query = '';
   private body!: HTMLElement;
   private summary!: HTMLElement;
@@ -37,6 +37,7 @@ export class TimerStatsView extends ItemView {
     for (const [value, text] of [['time', 'Total time ↓'], ['recent', 'Recently tracked ↓'], ['name', 'File name A–Z'], ['wpm', 'WPM ↓'], ['words', 'Words added ↓']]) {
       sort.createEl('option', { value, text });
     }
+    sort.value = this.sort;
     sort.addEventListener('change', () => { this.sort = sort.value; this.refresh(); });
     this.summary = this.contentEl.createEl('p', { cls: 'file-timer-summary' });
     const help = this.contentEl.createEl('details', { cls: 'file-timer-help' });
