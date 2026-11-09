@@ -31,7 +31,7 @@ export class TimerStatsView extends ItemView {
     }
     sort.addEventListener('change', () => { this.sort = sort.value; this.refresh(); });
     this.summary = this.contentEl.createEl('p', { cls: 'file-timer-summary' });
-    this.contentEl.createEl('p', { cls: 'file-timer-help', text: 'Reading WPM ≈ document words ÷ reading minutes (assumes one full read). Writing WPM = positive word-count changes ÷ writing minutes; includes pasted text. Word statistics start with this version; earlier time remains in Total.' });
+    this.contentEl.createEl('p', { cls: 'file-timer-help', text: 'Reading WPM ≈ document words ÷ reading minutes (assumes one full read). Writing WPM = positive word-count changes ÷ writing minutes; includes pasted text. Reading estimates include historical time from before word tracking. Writing WPM uses observed edits only; historical writing cannot be reconstructed.' });
     this.body = this.contentEl.createDiv({ cls: 'file-timer-table-wrap' });
     this.refresh();
     this.registerInterval(window.setInterval(() => {
@@ -72,7 +72,11 @@ export class TimerStatsView extends ItemView {
       tr.createEl('td', { text: markdown && row.stats.words !== null ? String(row.stats.words) : '—' });
       tr.createEl('td', { text: markdown ? String(row.stats.added) : '—' });
       const rate = markdown ? wpm(row.stats) : null;
-      tr.createEl('td', { text: rate === null ? '—' : `${row.stats.mode === 'reading' ? '≈ ' : ''}${rate.toFixed(1)}` });
+      const rateCell = tr.createEl('td', { text: rate === null ? '—' : `${row.stats.mode === 'reading' ? '≈ ' : ''}${rate.toFixed(1)}` });
+      if (row.stats.mode === 'reading' && row.stats.historicalMs > 0) {
+        rateCell.createEl('small', { cls: 'file-timer-backfill', text: 'Backfilled' });
+        rateCell.setAttribute('title', `Includes ${formatTime(row.stats.historicalMs)} of historical time, assumed to be reading. Uses the current document word count.`);
+      }
     }
   }
 }

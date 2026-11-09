@@ -50,3 +50,37 @@ test('legacy and malformed data do not invent historical word stats', () => {
   assert.equal(stats.get('A.md').added, 0);
   assert.equal(wpm(stats.get('A.md')), null);
 });
+
+test('backfills legacy reading time using the current word count', () => {
+  const stats = new FileStatistics(undefined, { 'Clippings/A.md': 120000 });
+  stats.get('Clippings/A.md').words = 600;
+  assert.equal(stats.get('Clippings/A.md').historicalMs, 120000);
+  assert.equal(wpm(stats.get('Clippings/A.md')), 300);
+  assert.equal(stats.get('Clippings/A.md').lastTracked, 0);
+  assert.equal(stats.get('Clippings/A.md').added, 0);
+});
+test('backfill excludes classified time and remains stable across reloads', () => {
+  const stats = new FileStatistics({ 'Clippings/A.md': { words: 600, readingMs: 30000, writingMs: 30000 } }, { 'Clippings/A.md': 180000 });
+  assert.equal(stats.get('Clippings/A.md').historicalMs, 120000);
+  assert.equal(wpm(stats.get('Clippings/A.md')), 240);
+  stats.credit('Clippings/A.md', 30000, 99);
+  const restored = new FileStatistics(JSON.parse(JSON.stringify(stats.files)), { 'Clippings/A.md': 210000 });
+  assert.equal(restored.get('Clippings/A.md').historicalMs, 120000);
+  assert.equal(wpm(restored.get('Clippings/A.md')), 200);
+});
+test('switching an old file to reading includes history without inflating writing stats', () => {
+  const stats = new FileStatistics({ 'A.md': { words: 600, added: 10, writingMs: 60000 } }, { 'A.md': 180000 });
+  assert.equal(wpm(stats.get('A.md')), 10);
+  stats.setMode('A.md', 'reading');
+  assert.equal(wpm(stats.get('A.md')), 300);
+  stats.setMode('A.md', 'writing');
+  assert.equal(wpm(stats.get('A.md')), 10);
+  assert.equal(stats.get('A.md').added, 10);
+});
+test('unknown words, zero time and inconsistent totals do not produce invalid rates', () => {
+  const stats = new FileStatistics({ 'Clippings/A.md': { readingMs: 2000 } }, { 'Clippings/A.md': 1000, 'Clippings/B.md': 0 });
+  assert.equal(stats.get('Clippings/A.md').historicalMs, 0);
+  assert.equal(wpm(stats.get('Clippings/A.md')), null);
+  stats.get('Clippings/B.md').words = 100;
+  assert.equal(wpm(stats.get('Clippings/B.md')), null);
+});

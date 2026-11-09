@@ -12,9 +12,9 @@ Process verified against official documentation on 9 November 2026. The current 
 
 ## Release
 
-The included GitHub Actions release workflow runs checks, builds, and creates a **draft** release when you push a version tag such as `1.1.0`. It verifies that the tag matches `manifest.json`. No `v` prefix. Review the draft and publish it when ready.
+The included GitHub Actions release workflow runs checks, builds, and creates a **draft** release when you push a version tag such as `1.1.1`. It verifies that the tag matches `manifest.json`. No `v` prefix. Review the draft and publish it when ready.
 
-Alternatively, after `npm ci && npm run check`, create a GitHub release manually using tag `1.1.0` and attach these three files individually:
+Alternatively, after `npm ci && npm run check`, create a GitHub release manually using tag `1.1.1` and attach these three files individually:
 
 - `main.js`
 - `manifest.json`

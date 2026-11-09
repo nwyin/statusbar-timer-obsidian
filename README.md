@@ -15,11 +15,11 @@ Open the pane from the chart ribbon icon or the **Show file time totals** comman
 
 Each row has a Reading/Writing selector. Files under a `Clippings` folder default to Reading; other files default to Writing. Changing mode preserves both counters and only changes how future time is classified.
 
-- **Reading WPM (estimate):** current document words / accumulated reading minutes. Assumes one full read; revisiting a file increases the denominator. This does not detect how many words you actually read.
+- **Reading WPM (estimate):** current document words / (accumulated reading minutes + historical minutes from before word tracking). Assumes one full read; revisiting a file increases the denominator. This does not detect how many words you actually read.
 - **Writing WPM:** sum of positive word-count changes observed while the file is actively tracked / accumulated writing minutes. Existing content is a baseline, deletions do not subtract, and pasted text and retyping count as additions. Time spent thinking also counts.
 - Word counts apply to Markdown, exclude frontmatter, fenced code, images and link URLs, and use Unicode letter/number groups. This is an approximate prose count, not a language-specific tokenizer. Other file formats show a dash for word statistics.
 - Rates display after at least one second of the corresponding mode's time. Very short samples can produce large WPM values.
-- Version 1.0 time totals are preserved. Last-tracked timestamps and mode-specific word/time statistics begin with version 1.1; past reading/writing activity cannot be reconstructed.
+- Version 1.0 time totals are preserved. Version 1.1.1 backfills reading WPM using that historical time and the current document word count, labeled **Backfilled** in the table. This assumes historical time was reading, and also applies when you change an older file to Reading. Previously recorded writing time is excluded. Writing WPM still uses only observed additions and writing time since version 1.1; historical words written and last-tracked dates cannot be reconstructed. Backfilling never changes total time or invents words added.
 
 ## Install locally
 

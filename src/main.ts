@@ -18,7 +18,7 @@ export default class StatusBarFileTimer extends Plugin {
   async onload(): Promise<void> {
     const saved = await this.loadData();
     this.timer = new FileTimer(saved?.totals);
-    this.statistics = new FileStatistics(saved?.statistics);
+    this.statistics = new FileStatistics(saved?.statistics, this.timer.totals);
     this.registerView(STATS_VIEW, leaf => new TimerStatsView(leaf, this));
     this.addRibbonIcon('chart-no-axes-column', 'Open file time & words', () => { void this.showTotals(); });
     this.registerEvent(this.app.workspace.on('editor-change', () => this.tick()));
@@ -106,7 +106,7 @@ export default class StatusBarFileTimer extends Plugin {
 
   private persist(): Promise<void> {
     // Serialize writes so an older snapshot cannot overwrite a newer total.
-    const data = { version: 2, totals: { ...this.timer.totals }, statistics: JSON.parse(JSON.stringify(this.statistics.files)) };
+    const data = { version: 3, totals: { ...this.timer.totals }, statistics: JSON.parse(JSON.stringify(this.statistics.files)) };
     this.saves = this.saves.then(() => this.saveData(data)).then(() => {
       this.saveFailed = false;
     }).catch(error => {

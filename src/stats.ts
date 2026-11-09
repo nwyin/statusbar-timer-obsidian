@@ -6,6 +6,7 @@ export interface FileStats {
   readingMs: number;
   writingMs: number;
   lastTracked: number;
+  historicalMs: number;
 }
 export function countWords(markdown: string): number {
   const text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '')
@@ -18,9 +19,8 @@ export function countWords(markdown: string): number {
 export class FileStatistics {
   readonly files: Record<string, FileStats> = Object.create(null);
   private baseline: { path: string; words: number } | null = null;
-  constructor(saved?: unknown) {
-    if (!saved || typeof saved !== 'object') return;
-    for (const [path, value] of Object.entries(saved)) {
+  constructor(saved?: unknown, totals: Record<string, number> = {}) {
+    for (const [path, value] of Object.entries(saved && typeof saved === 'object' ? saved : {})) {
       if (!value || typeof value !== 'object') continue;
       const s = value as Partial<FileStats>;
       const stat = this.get(path);
@@ -30,11 +30,18 @@ export class FileStatistics {
         if (typeof n === 'number' && Number.isFinite(n) && n >= 0) stat[key] = n;
       }
     }
+    // Earlier versions tracked total time without a reading/writing breakdown.
+    // Keep that time separate: it can estimate reading, but not words written.
+    for (const [path, total] of Object.entries(totals)) {
+      if (!Number.isFinite(total) || total < 0) continue;
+      const stat = this.get(path);
+      stat.historicalMs = Math.max(0, total - stat.readingMs - stat.writingMs);
+    }
   }
   get(path: string): FileStats {
     return this.files[path] ??= {
       mode: /(^|\/)clippings\//i.test(path) ? 'reading' : 'writing',
-      words: null, added: 0, readingMs: 0, writingMs: 0, lastTracked: 0,
+      words: null, added: 0, readingMs: 0, writingMs: 0, lastTracked: 0, historicalMs: 0,
     };
   }
   credit(path: string, ms: number, now: number): void {
@@ -66,7 +73,7 @@ export class FileStatistics {
   }
 }
 export function wpm(stat: FileStats): number | null {
-  const ms = stat.mode === 'reading' ? stat.readingMs : stat.writingMs;
+  const ms = stat.mode === 'reading' ? stat.readingMs + stat.historicalMs : stat.writingMs;
   const words = stat.mode === 'reading' ? stat.words : stat.added;
   return ms >= 1000 && words !== null ? words * 60000 / ms : null;
 }
