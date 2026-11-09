@@ -1,9 +1,9 @@
 {
   "id": "statusbar-file-timer",
   "name": "Status Bar File Timer",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "minAppVersion": "1.8.7",
-  "description": "Track time spent viewing each file in the status bar, pausing when you switch files or leave the app.",
+  "description": "Track focused time and reading or writing speed per file, with a mobile-friendly statistics view and syncable vault data.",
   "author": "tau",
-  "isDesktopOnly": true
+  "isDesktopOnly": false
 }

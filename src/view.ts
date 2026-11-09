@@ -6,12 +6,16 @@ export interface StatsRow { path: string; total: number; stats: FileStats }
 export interface StatsSource {
   rows(): StatsRow[];
   setMode(path: string, mode: Mode): void;
+  togglePause(): void;
+  trackingState(): { paused: boolean; text: string };
 }
 export class TimerStatsView extends ItemView {
   private sort = 'time';
   private query = '';
   private body!: HTMLElement;
   private summary!: HTMLElement;
+  private pauseButton!: HTMLButtonElement;
+  private activity!: HTMLElement;
   constructor(leaf: WorkspaceLeaf, private source: StatsSource) { super(leaf); }
   getViewType(): string { return STATS_VIEW; }
   getDisplayText(): string { return 'File time & words'; }
@@ -20,6 +24,10 @@ export class TimerStatsView extends ItemView {
     this.contentEl.empty();
     this.contentEl.addClass('file-timer-pane');
     this.contentEl.createEl('h2', { text: 'File time & words' });
+    const activity = this.contentEl.createDiv({ cls: 'file-timer-activity' });
+    this.activity = activity.createSpan();
+    this.pauseButton = activity.createEl('button', { text: 'Pause tracking' });
+    this.pauseButton.addEventListener('click', () => { this.source.togglePause(); this.refresh(); });
     const controls = this.contentEl.createDiv({ cls: 'file-timer-controls' });
     const search = controls.createEl('input', { type: 'search', placeholder: 'Filter files…' });
     search.setAttribute('aria-label', 'Filter tracked files');
@@ -31,7 +39,9 @@ export class TimerStatsView extends ItemView {
     }
     sort.addEventListener('change', () => { this.sort = sort.value; this.refresh(); });
     this.summary = this.contentEl.createEl('p', { cls: 'file-timer-summary' });
-    this.contentEl.createEl('p', { cls: 'file-timer-help', text: 'Reading WPM ≈ document words ÷ reading minutes (assumes one full read). Writing WPM = positive word-count changes ÷ writing minutes; includes pasted text. Reading estimates include historical time from before word tracking. Writing WPM uses observed edits only; historical writing cannot be reconstructed.' });
+    const help = this.contentEl.createEl('details', { cls: 'file-timer-help' });
+    help.createEl('summary', { text: 'How WPM is calculated' });
+    help.createEl('p', { text: 'Reading WPM ≈ document words ÷ reading minutes (assumes one full read). Writing WPM = positive word-count changes ÷ writing minutes; includes pasted text. Reading estimates include historical time from before word tracking. Writing WPM uses observed edits only; historical writing cannot be reconstructed.' });
     this.body = this.contentEl.createDiv({ cls: 'file-timer-table-wrap' });
     this.refresh();
     this.registerInterval(window.setInterval(() => {
@@ -41,6 +51,10 @@ export class TimerStatsView extends ItemView {
   }
   refresh(): void {
     if (!this.body) return;
+    const state = this.source.trackingState();
+    this.activity.setText(state.text);
+    this.pauseButton.setText(state.paused ? 'Resume tracking' : 'Pause tracking');
+    this.pauseButton.setAttribute('aria-pressed', String(state.paused));
     const rows = this.source.rows().filter(row => row.path.toLowerCase().includes(this.query));
     rows.sort((a, b) => {
       const difference = this.sort === 'recent' ? b.stats.lastTracked - a.stats.lastTracked
@@ -73,6 +87,8 @@ export class TimerStatsView extends ItemView {
       tr.createEl('td', { text: markdown ? String(row.stats.added) : '—' });
       const rate = markdown ? wpm(row.stats) : null;
       const rateCell = tr.createEl('td', { text: rate === null ? '—' : `${row.stats.mode === 'reading' ? '≈ ' : ''}${rate.toFixed(1)}` });
+      const labels = ['File', 'Total time', 'Last tracked', 'Mode', 'Document words', 'Words added', 'WPM'];
+      Array.from(tr.children).forEach((cell, index) => cell.setAttribute('data-label', labels[index]));
       if (row.stats.mode === 'reading' && row.stats.historicalMs > 0) {
         rateCell.setAttribute('title', `Includes ${formatTime(row.stats.historicalMs)} of historical time, assumed to be reading. Uses the current document word count.`);
       }

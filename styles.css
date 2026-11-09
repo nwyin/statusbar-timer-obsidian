@@ -9,10 +9,26 @@
 .file-timer-controls input { flex: 1; min-width: 140px; }
 .file-timer-summary { font-variant-numeric: tabular-nums; font-weight: 600; }
 .file-timer-help { color: var(--text-muted); font-size: var(--font-ui-small); max-width: 75ch; }
+.file-timer-help { margin-bottom: var(--size-4-3); }
+.file-timer-help summary { cursor: pointer; padding: var(--size-4-2) 0; }
 .file-timer-table-wrap { overflow-x: auto; }
 .file-timer-table-wrap table { width: 100%; border-collapse: collapse; font-size: var(--font-ui-small); }
 .file-timer-table-wrap th, .file-timer-table-wrap td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--background-modifier-border); font-variant-numeric: tabular-nums; }
 .file-timer-table-wrap th { white-space: nowrap; color: var(--text-muted); }
 .file-timer-table-wrap td:first-child { min-width: 180px; overflow-wrap: anywhere; }
 .file-timer-table-wrap tr:hover td { background: var(--background-secondary); }
-
+.file-timer-activity { display: flex; align-items: center; justify-content: space-between; gap: var(--size-4-2); margin-bottom: var(--size-4-3); }
+.file-timer-activity span { color: var(--text-muted); overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .file-timer-controls input, .file-timer-controls select { width: 100%; min-height: 44px; }
+  .file-timer-activity { align-items: stretch; flex-direction: column; }
+  .file-timer-activity button, .file-timer-table-wrap select { min-height: 44px; }
+  .file-timer-table-wrap table, .file-timer-table-wrap tbody, .file-timer-table-wrap tr { display: block; }
+  .file-timer-table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .file-timer-table-wrap tr { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); margin-bottom: var(--size-4-3); padding: var(--size-4-2); }
+  .file-timer-table-wrap td { display: flex; align-items: center; justify-content: space-between; gap: var(--size-4-2); border: 0; padding: var(--size-4-2); }
+  .file-timer-table-wrap td::before { content: attr(data-label); color: var(--text-muted); flex-shrink: 0; }
+  .file-timer-table-wrap td:first-child { display: block; min-width: 0; font-weight: 600; }
+  .file-timer-table-wrap td:first-child::before { display: none; }
+  .file-timer-table-wrap a { display: block; padding: var(--size-4-2) 0; }
+}
