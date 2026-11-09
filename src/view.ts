@@ -74,7 +74,6 @@ export class TimerStatsView extends ItemView {
       const rate = markdown ? wpm(row.stats) : null;
       const rateCell = tr.createEl('td', { text: rate === null ? '—' : `${row.stats.mode === 'reading' ? '≈ ' : ''}${rate.toFixed(1)}` });
       if (row.stats.mode === 'reading' && row.stats.historicalMs > 0) {
-        rateCell.createEl('small', { cls: 'file-timer-backfill', text: 'Backfilled' });
         rateCell.setAttribute('title', `Includes ${formatTime(row.stats.historicalMs)} of historical time, assumed to be reading. Uses the current document word count.`);
       }
     }

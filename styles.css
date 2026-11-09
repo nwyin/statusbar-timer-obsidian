@@ -16,4 +16,3 @@
 .file-timer-table-wrap td:first-child { min-width: 180px; overflow-wrap: anywhere; }
 .file-timer-table-wrap tr:hover td { background: var(--background-secondary); }
 
-.file-timer-backfill { display: block; color: var(--text-muted); font-size: var(--font-smallest); }
